@@ -1,9 +1,11 @@
 package grup1.app
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
@@ -16,7 +18,9 @@ import javax.xml.transform.TransformerFactory
 import javax.xml.transform.dom.DOMSource
 import javax.xml.transform.stream.StreamResult
 import org.java_websocket.client.WebSocketClient
+import org.java_websocket.drafts.Draft_6455
 import org.java_websocket.handshake.ServerHandshake
+
 class ConfigActivity : AppCompatActivity() {
 
     lateinit var editUrl: EditText
@@ -26,12 +30,13 @@ class ConfigActivity : AppCompatActivity() {
     lateinit var textEstat: TextView
 
     lateinit var wsclient: MyWebSocketClient
+    var cartelleraOberta = false
 
-    inner class MyWebSocketClient(serverUri: URI) : WebSocketClient(serverUri) {
+    inner class MyWebSocketClient(serverUri: URI) : WebSocketClient(serverUri, Draft_6455(), null, 5000) {
 
         override fun onOpen(handshakedata: ServerHandshake?) {
             runOnUiThread {
-                textEstat.text = "Connectat al servidor"
+                mostrarResultat("Connectat al servidor")
             }
         }
 
@@ -40,20 +45,42 @@ class ConfigActivity : AppCompatActivity() {
         }
 
         override fun onClose(code: Int, reason: String?, remote: Boolean) {
-            println("Connexió tancada: $reason")
+            runOnUiThread {
+                mostrarResultat("No s'ha pogut connectar: " + reason)
+            }
         }
 
         override fun onError(ex: Exception?) {
             runOnUiThread {
-                textEstat.text = "Error de connexió: " + ex?.message
+                mostrarResultat("Error de connexió: " + ex?.message)
             }
         }
     }
 
     fun connectaWS(url: String) {
-        val uri = URI(url)
+        var adreca = url
+        if (!adreca.startsWith("ws://") && !adreca.startsWith("wss://")) {
+            adreca = "wss://" + adreca
+        }
+        val uri = URI(adreca)
         wsclient = MyWebSocketClient(uri)
         wsclient.connect()
+    }
+
+    fun mostrarResultat(missatge: String) {
+        if (cartelleraOberta) {
+            return
+        }
+        cartelleraOberta = true
+        textEstat.text = missatge
+        Toast.makeText(this, missatge, Toast.LENGTH_LONG).show()
+        obrirCartellera()
+    }
+
+    fun obrirCartellera() {
+        val intent = Intent(this, MainActivity::class.java)
+        startActivity(intent)
+        finish()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
