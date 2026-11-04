@@ -11,15 +11,11 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import java.io.File
-import java.net.URI
 import javax.xml.parsers.DocumentBuilderFactory
 import javax.xml.transform.OutputKeys
 import javax.xml.transform.TransformerFactory
 import javax.xml.transform.dom.DOMSource
 import javax.xml.transform.stream.StreamResult
-import org.java_websocket.client.WebSocketClient
-import org.java_websocket.drafts.Draft_6455
-import org.java_websocket.handshake.ServerHandshake
 
 class ConfigActivity : AppCompatActivity() {
 
@@ -29,59 +25,7 @@ class ConfigActivity : AppCompatActivity() {
     lateinit var btnConnectar: Button
     lateinit var textEstat: TextView
 
-    lateinit var wsclient: MyWebSocketClient
     var cartelleraOberta = false
-
-    inner class MyWebSocketClient(serverUri: URI) : WebSocketClient(serverUri, Draft_6455(), null, 5000) {
-
-        override fun onOpen(handshakedata: ServerHandshake?) {
-            runOnUiThread {
-                mostrarResultat("Connectat al servidor")
-            }
-        }
-
-        override fun onMessage(message: String?) {
-            println("Rebut: $message")
-        }
-
-        override fun onClose(code: Int, reason: String?, remote: Boolean) {
-            runOnUiThread {
-                mostrarResultat("No s'ha pogut connectar: " + reason)
-            }
-        }
-
-        override fun onError(ex: Exception?) {
-            runOnUiThread {
-                mostrarResultat("Error de connexió: " + ex?.message)
-            }
-        }
-    }
-
-    fun connectaWS(url: String) {
-        var adreca = url
-        if (!adreca.startsWith("ws://") && !adreca.startsWith("wss://")) {
-            adreca = "wss://" + adreca
-        }
-        val uri = URI(adreca)
-        wsclient = MyWebSocketClient(uri)
-        wsclient.connect()
-    }
-
-    fun mostrarResultat(missatge: String) {
-        if (cartelleraOberta) {
-            return
-        }
-        cartelleraOberta = true
-        textEstat.text = missatge
-        Toast.makeText(this, missatge, Toast.LENGTH_LONG).show()
-        obrirCartellera()
-    }
-
-    fun obrirCartellera() {
-        val intent = Intent(this, MainActivity::class.java)
-        startActivity(intent)
-        finish()
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -101,6 +45,17 @@ class ConfigActivity : AppCompatActivity() {
 
         carregarConfig()
 
+        Connexio.onConnectat = {
+            runOnUiThread {
+                mostrarResultat("Connectat al servidor")
+            }
+        }
+        Connexio.onError = { missatge ->
+            runOnUiThread {
+                mostrarResultat(missatge)
+            }
+        }
+
         btnConnectar.setOnClickListener {
             val url = editUrl.text.toString()
             val nom = editNom.text.toString()
@@ -114,12 +69,30 @@ class ConfigActivity : AppCompatActivity() {
                 guardarConfig(url, nom, correu)
                 textEstat.text = "Connectant..."
                 try {
-                    connectaWS(url)
+                    Connexio.connectar(url)
                 } catch (e: Exception) {
                     textEstat.text = "URL no vàlida: " + e.message
                 }
             }
         }
+    }
+
+    fun mostrarResultat(missatge: String) {
+        if (cartelleraOberta) {
+            return
+        }
+        cartelleraOberta = true
+        textEstat.text = missatge
+        Toast.makeText(this, missatge, Toast.LENGTH_LONG).show()
+        obrirCartellera()
+    }
+
+    fun obrirCartellera() {
+        Connexio.onConnectat = null
+        Connexio.onError = null
+        val intent = Intent(this, MainActivity::class.java)
+        startActivity(intent)
+        finish()
     }
 
     fun guardarConfig(url: String, nom: String, correu: String) {

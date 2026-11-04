@@ -4,12 +4,14 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import org.json.JSONObject
 
 class MainActivity : AppCompatActivity() {
 
@@ -27,28 +29,58 @@ class MainActivity : AppCompatActivity() {
             insets
         }
 
-        carregarCatalegLocal()
-
         recyclerEsdeveniments = findViewById(R.id.recyclerEsdeveniments)
         btnCistella = findViewById(R.id.btnCistella)
         textComptador = findViewById(R.id.textComptador)
 
         recyclerEsdeveniments.layoutManager = LinearLayoutManager(this)
-        recyclerEsdeveniments.adapter = EsdevenimentAdapter(Dades.cataleg.esdeveniments) { esdeveniment ->
-            val intent = Intent(this, EntradesActivity::class.java)
-            intent.putExtra("idEsdeveniment", esdeveniment.id)
-            startActivity(intent)
-        }
 
         btnCistella.setOnClickListener {
             val intent = Intent(this, CistellaActivity::class.java)
             startActivity(intent)
+        }
+
+        if (Connexio.estaConnectat()) {
+            demanarCataleg()
+        } else {
+            carregarCatalegLocal()
+            mostrarCataleg()
         }
     }
 
     override fun onResume() {
         super.onResume()
         actualitzarComptador()
+    }
+
+    fun demanarCataleg() {
+        Connexio.onMissatge = { missatge ->
+            val obj = JSONObject(missatge)
+            val type = obj.getString("type")
+            if (type == "catalog") {
+                val cataleg = CatalegParser.llegirJSON(obj.getJSONObject("catalog").toString())
+                runOnUiThread {
+                    Dades.cataleg = cataleg
+                    mostrarCataleg()
+                }
+            } else if (type == "error") {
+                runOnUiThread {
+                    Toast.makeText(this, "Error: " + obj.optString("message"), Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+
+        val peticio = JSONObject()
+        peticio.put("type", "cataleg")
+        Connexio.enviar(peticio.toString())
+    }
+
+    fun mostrarCataleg() {
+        recyclerEsdeveniments.adapter = EsdevenimentAdapter(Dades.cataleg.esdeveniments) { esdeveniment ->
+            val intent = Intent(this, EntradesActivity::class.java)
+            intent.putExtra("idEsdeveniment", esdeveniment.id)
+            startActivity(intent)
+        }
     }
 
     fun actualitzarComptador() {
