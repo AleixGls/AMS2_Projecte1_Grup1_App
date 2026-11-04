@@ -47,12 +47,12 @@ class ConfigActivity : AppCompatActivity() {
 
         Connexio.onConnectat = {
             runOnUiThread {
-                mostrarResultat("Connectat al servidor")
+                connexioCorrecta()
             }
         }
         Connexio.onError = { missatge ->
             runOnUiThread {
-                mostrarResultat(missatge)
+                connexioError(missatge)
             }
         }
 
@@ -68,23 +68,31 @@ class ConfigActivity : AppCompatActivity() {
             } else {
                 guardarConfig(url, nom, correu)
                 textEstat.text = "Connectant..."
+                btnConnectar.isEnabled = false
                 try {
                     Connexio.connectar(url)
                 } catch (e: Exception) {
-                    textEstat.text = "URL no vàlida: " + e.message
+                    connexioError("URL no vàlida")
                 }
             }
         }
     }
 
-    fun mostrarResultat(missatge: String) {
+    fun connexioCorrecta() {
         if (cartelleraOberta) {
             return
         }
         cartelleraOberta = true
-        textEstat.text = missatge
-        Toast.makeText(this, missatge, Toast.LENGTH_LONG).show()
+        Toast.makeText(this, "Connectat al servidor", Toast.LENGTH_SHORT).show()
         obrirCartellera()
+    }
+
+    fun connexioError(missatge: String) {
+        if (cartelleraOberta) {
+            return
+        }
+        textEstat.text = missatge
+        btnConnectar.isEnabled = true
     }
 
     fun obrirCartellera() {

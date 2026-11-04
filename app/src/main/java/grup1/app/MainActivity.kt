@@ -43,8 +43,7 @@ class MainActivity : AppCompatActivity() {
         if (Connexio.estaConnectat()) {
             demanarCataleg()
         } else {
-            carregarCatalegLocal()
-            mostrarCataleg()
+            Toast.makeText(this, "No hi ha connexió amb el servidor", Toast.LENGTH_LONG).show()
         }
     }
 
