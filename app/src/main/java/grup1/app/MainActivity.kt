@@ -3,6 +3,7 @@ package grup1.app
 import android.content.Intent
 import android.os.Bundle
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
@@ -18,6 +19,7 @@ class MainActivity : AppCompatActivity() {
     lateinit var recyclerEsdeveniments: RecyclerView
     lateinit var btnCistella: ImageView
     lateinit var textComptador: TextView
+    lateinit var btnMenuEntrades: LinearLayout
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,11 +34,17 @@ class MainActivity : AppCompatActivity() {
         recyclerEsdeveniments = findViewById(R.id.recyclerEsdeveniments)
         btnCistella = findViewById(R.id.btnCistella)
         textComptador = findViewById(R.id.textComptador)
+        btnMenuEntrades = findViewById(R.id.btnMenuEntrades)
 
         recyclerEsdeveniments.layoutManager = LinearLayoutManager(this)
 
         btnCistella.setOnClickListener {
             val intent = Intent(this, CistellaActivity::class.java)
+            startActivity(intent)
+        }
+
+        btnMenuEntrades.setOnClickListener {
+            val intent = Intent(this, MevesEntradesActivity::class.java)
             startActivity(intent)
         }
 
@@ -84,10 +92,5 @@ class MainActivity : AppCompatActivity() {
 
     fun actualitzarComptador() {
         textComptador.text = Dades.cistella.size.toString()
-    }
-
-    fun carregarCatalegLocal() {
-        val text = assets.open("cataleg.json").bufferedReader().readText()
-        Dades.cataleg = CatalegParser.llegirJSON(text)
     }
 }
