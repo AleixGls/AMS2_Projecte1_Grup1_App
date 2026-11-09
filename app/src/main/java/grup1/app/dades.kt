@@ -4,8 +4,9 @@ data class Zona(val id: String, val nom: String, val tipus: String, val aforamen
 
 data class Recinte(val id: String, val nom: String, val zones: List<Zona>)
 
-data class TipusEntrada(val id: String, val nom: String, val zona: String, val preu: Double, val quota: Int)
+data class TipusEntrada(val id: String, val nom: String, val zona: String, val preu: Double, val quota: Int, val disponibles: Int)
 
+data class EntradaComprada(val localitzador: String, val idEsdeveniment: String, val idTipus: String)
 data class Esdeveniment(
     val id: String,
     val recinte: String,
@@ -21,6 +22,8 @@ data class Cataleg(val recintes: List<Recinte>, val esdeveniments: List<Esdeveni
 object Dades {
     var cataleg: Cataleg = Cataleg(listOf(), listOf())
     val cistella: MutableList<TipusEntrada> = mutableListOf()
+    var mevesEntrades: List<EntradaComprada> = listOf()
+
 
     fun buscarEsdeveniment(id: String): Esdeveniment? {
         for (esdeveniment in cataleg.esdeveniments) {
@@ -66,4 +69,6 @@ object Dades {
         val zona = buscarZona(tipus.zona)
         return zona != null && zona.tipus.equals("general", ignoreCase = true)
     }
+
 }
+

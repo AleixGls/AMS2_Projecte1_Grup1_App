@@ -41,7 +41,8 @@ object CatalegParser {
                     objTipus.getString("nom"),
                     objTipus.getString("zona"),
                     objTipus.getDouble("preu"),
-                    objTipus.getInt("quota")
+                    objTipus.getInt("quota"),
+                    objTipus.optInt("disponibles", objTipus.getInt("quota"))
                 ))
             }
 
@@ -57,5 +58,19 @@ object CatalegParser {
         }
 
         return Cataleg(recintes, esdeveniments)
+    }
+    fun llegirEntrades(text: String): List<EntradaComprada> {
+        val arrel = JSONObject(text)
+        val array = arrel.getJSONArray("entrades")
+        val llista = mutableListOf<EntradaComprada>()
+        for (i in 0 until array.length()) {
+            val obj = array.getJSONObject(i)
+            llista.add(EntradaComprada(
+                obj.getString("localitzador"),
+                obj.getString("esdeveniment"),
+                obj.getString("tipus")
+            ))
+        }
+        return llista
     }
 }
