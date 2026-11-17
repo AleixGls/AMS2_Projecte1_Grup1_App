@@ -6,8 +6,7 @@ data class Recinte(val id: String, val nom: String, val zones: List<Zona>)
 
 data class TipusEntrada(val id: String, val nom: String, val zona: String, val preu: Double, val quota: Int, val disponibles: Int)
 
-data class EntradaComprada(val localitzador: String, val idEsdeveniment: String, val idTipus: String)
-data class Esdeveniment(
+data class EntradaComprada(val localitzador: String, val idEsdeveniment: String, val idTipus: String, val nom: String)data class Esdeveniment(
     val id: String,
     val recinte: String,
     val nom: String,
@@ -16,12 +15,22 @@ data class Esdeveniment(
     val descripcio: String,
     val tipusEntrades: List<TipusEntrada>
 )
+data class SeientCistella(
+    val idEsdeveniment: String,
+    val idTipus: String,
+    val idSeient: String,
+    val fila: Int,
+    val columna: Int,
+    var error: Boolean = false
+)
 
 data class Cataleg(val recintes: List<Recinte>, val esdeveniments: List<Esdeveniment>)
 
 object Dades {
     var cataleg: Cataleg = Cataleg(listOf(), listOf())
     val cistella: MutableList<TipusEntrada> = mutableListOf()
+    val seientsCistella: MutableList<SeientCistella> = mutableListOf()
+    val seleccio: MutableList<SeientCistella> = mutableListOf()
     var mevesEntrades: List<EntradaComprada> = listOf()
 
 

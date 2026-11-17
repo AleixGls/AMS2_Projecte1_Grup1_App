@@ -1,5 +1,6 @@
 package grup1.app
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -15,6 +16,7 @@ class MevesEntradesActivity : AppCompatActivity() {
 
     lateinit var layoutEntrades: LinearLayout
     lateinit var btnMenuCartellera: LinearLayout
+    lateinit var btnMenuPerfil: LinearLayout
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -28,8 +30,15 @@ class MevesEntradesActivity : AppCompatActivity() {
 
         layoutEntrades = findViewById(R.id.layoutEntrades)
         btnMenuCartellera = findViewById(R.id.btnMenuCartellera)
+        btnMenuPerfil = findViewById(R.id.btnMenuPerfil)
 
         btnMenuCartellera.setOnClickListener {
+            finish()
+        }
+
+        btnMenuPerfil.setOnClickListener {
+            val intent = Intent(this, PerfilActivity::class.java)
+            startActivity(intent)
             finish()
         }
 
@@ -88,6 +97,9 @@ class MevesEntradesActivity : AppCompatActivity() {
         val textDataHora: TextView = vista.findViewById(R.id.textDataHora)
         val textTipus: TextView = vista.findViewById(R.id.textTipus)
         val textLocalitzador: TextView = vista.findViewById(R.id.textLocalitzador)
+        val textNom: TextView = vista.findViewById(R.id.textNom)
+
+        textNom.text = "A nom de: " + entrada.nom
 
         textLocalitzador.text = entrada.localitzador
 

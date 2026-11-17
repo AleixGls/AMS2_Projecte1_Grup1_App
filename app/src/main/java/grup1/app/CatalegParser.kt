@@ -68,7 +68,8 @@ object CatalegParser {
             llista.add(EntradaComprada(
                 obj.getString("localitzador"),
                 obj.getString("esdeveniment"),
-                obj.getString("tipus")
+                obj.getString("tipus"),
+                obj.optString("nom", "")
             ))
         }
         return llista
