@@ -1,12 +1,27 @@
 package grup1.app
 
+import android.content.Intent
 import android.os.Bundle
+import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import org.json.JSONObject
 
 class MainActivity : AppCompatActivity() {
+
+    lateinit var recyclerEsdeveniments: RecyclerView
+    lateinit var btnCistella: ImageView
+    lateinit var textComptador: TextView
+    lateinit var btnMenuEntrades: LinearLayout
+    lateinit var btnMenuPerfil: LinearLayout
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -16,5 +31,73 @@ class MainActivity : AppCompatActivity() {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
+
+        recyclerEsdeveniments = findViewById(R.id.recyclerEsdeveniments)
+        btnCistella = findViewById(R.id.btnCistella)
+        textComptador = findViewById(R.id.textComptador)
+        btnMenuEntrades = findViewById(R.id.btnMenuEntrades)
+        btnMenuPerfil = findViewById(R.id.btnMenuPerfil)
+
+        recyclerEsdeveniments.layoutManager = LinearLayoutManager(this)
+
+        btnCistella.setOnClickListener {
+            val intent = Intent(this, CistellaActivity::class.java)
+            startActivity(intent)
+        }
+
+        btnMenuEntrades.setOnClickListener {
+            val intent = Intent(this, MevesEntradesActivity::class.java)
+            startActivity(intent)
+        }
+
+        btnMenuPerfil.setOnClickListener {
+            val intent = Intent(this, PerfilActivity::class.java)
+            startActivity(intent)
+        }
+
+        if (Connexio.estaConnectat()) {
+            demanarCataleg()
+        } else {
+            Toast.makeText(this, "No hi ha connexió amb el servidor", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        actualitzarComptador()
+    }
+
+    fun demanarCataleg() {
+        Connexio.onMissatge = { missatge ->
+            val obj = JSONObject(missatge)
+            val type = obj.getString("type")
+            if (type == "catalog") {
+                val cataleg = CatalegParser.llegirJSON(obj.getJSONObject("catalog").toString())
+                runOnUiThread {
+                    Dades.cataleg = cataleg
+                    mostrarCataleg()
+                }
+            } else if (type == "error") {
+                runOnUiThread {
+                    Toast.makeText(this, "Error: " + obj.optString("message"), Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+
+        val peticio = JSONObject()
+        peticio.put("type", "cataleg")
+        Connexio.enviar(peticio.toString())
+    }
+
+    fun mostrarCataleg() {
+        recyclerEsdeveniments.adapter = EsdevenimentAdapter(Dades.cataleg.esdeveniments) { esdeveniment ->
+            val intent = Intent(this, EntradesActivity::class.java)
+            intent.putExtra("idEsdeveniment", esdeveniment.id)
+            startActivity(intent)
+        }
+    }
+
+    fun actualitzarComptador() {
+        textComptador.text = (Dades.cistella.size + Dades.seientsCistella.size).toString()
     }
 }
