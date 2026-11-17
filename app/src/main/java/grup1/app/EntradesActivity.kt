@@ -1,5 +1,6 @@
 package grup1.app
 
+import android.content.Intent
 import android.content.res.ColorStateList
 import android.os.Bundle
 import android.widget.Button
@@ -57,19 +58,19 @@ class EntradesActivity : AppCompatActivity() {
                 Dades.nomRecinte(esdeveniment.recinte)
         textDescripcio.text = esdeveniment.descripcio
 
-        var hiHaGenerals = false
-        for (tipus in esdeveniment.tipusEntrades) {
-            if (Dades.esGeneral(tipus)) {
-                hiHaGenerals = true
-                afegirBoto(tipus)
-            }
-        }
-
-        if (!hiHaGenerals) {
+        if (esdeveniment.tipusEntrades.isEmpty()) {
             val text = TextView(this)
-            text.text = "No hi ha entrades generals disponibles"
+            text.text = "No hi ha entrades disponibles"
             text.setPadding(0, 24, 0, 0)
             layoutEntrades.addView(text)
+        }
+
+        for (tipus in esdeveniment.tipusEntrades) {
+            if (Dades.esGeneral(tipus)) {
+                afegirBoto(tipus)
+            } else {
+                afegirBotoNumerada(esdeveniment, tipus)
+            }
         }
     }
 
@@ -81,6 +82,20 @@ class EntradesActivity : AppCompatActivity() {
         boto.setOnClickListener {
             Dades.cistella.add(tipus)
             Toast.makeText(this, tipus.nom + " afegida a la cistella (" + Dades.cistella.size + ")", Toast.LENGTH_SHORT).show()
+        }
+        layoutEntrades.addView(boto)
+    }
+
+    fun afegirBotoNumerada(esdeveniment: Esdeveniment, tipus: TipusEntrada) {
+        val boto = Button(this)
+        boto.text = tipus.nom + " - " + String.format("%.2f €", tipus.preu) + " (triar seients)"
+        boto.setTextColor(getColor(android.R.color.white))
+        boto.backgroundTintList = ColorStateList.valueOf(getColor(R.color.negre))
+        boto.setOnClickListener {
+            val intent = Intent(this, SeientsActivity::class.java)
+            intent.putExtra("idEsdeveniment", esdeveniment.id)
+            intent.putExtra("idTipus", tipus.id)
+            startActivity(intent)
         }
         layoutEntrades.addView(boto)
     }

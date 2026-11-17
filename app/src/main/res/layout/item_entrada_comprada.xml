@@ -38,6 +38,16 @@
         app:layout_constraintTop_toBottomOf="@id/textDataHora" />
 
     <TextView
+        android:id="@+id/textNom"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:textColor="#555555"
+        app:layout_constraintEnd_toStartOf="@id/textLocalitzador"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/textTipus" />
+
+    <TextView
         android:id="@+id/textLocalitzador"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

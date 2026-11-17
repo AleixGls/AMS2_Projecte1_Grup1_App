@@ -1,6 +1,8 @@
 package grup1.app
 
+import android.graphics.Color
 import android.os.Bundle
+import android.view.View
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -55,7 +57,7 @@ class CistellaActivity : AppCompatActivity() {
     fun mostrarCistella() {
         layoutLinies.removeAllViews()
 
-        if (Dades.cistella.isEmpty()) {
+        if (Dades.cistella.isEmpty() && Dades.seientsCistella.isEmpty()) {
             val text = TextView(this)
             text.text = "La cistella està buida"
             text.setPadding(24, 24, 24, 24)
@@ -76,6 +78,14 @@ class CistellaActivity : AppCompatActivity() {
             }
         }
 
+        for (seient in Dades.seientsCistella) {
+            val tipus = buscarTipus(seient.idEsdeveniment, seient.idTipus)
+            if (tipus != null) {
+                total = total + tipus.preu
+                afegirLiniaSeient(seient, tipus)
+            }
+        }
+
         textTotal.text = "TOTAL: " + String.format("%.2f €", total)
     }
 
@@ -89,6 +99,18 @@ class CistellaActivity : AppCompatActivity() {
         return quantitat
     }
 
+    fun buscarTipus(idEsdeveniment: String, idTipus: String): TipusEntrada? {
+        val esdeveniment = Dades.buscarEsdeveniment(idEsdeveniment)
+        if (esdeveniment != null) {
+            for (tipus in esdeveniment.tipusEntrades) {
+                if (tipus.id == idTipus) {
+                    return tipus
+                }
+            }
+        }
+        return null
+    }
+
     fun afegirLinia(tipus: TipusEntrada, quantitat: Int) {
         val vista = layoutInflater.inflate(R.layout.item_cistella, layoutLinies, false)
 
@@ -96,6 +118,9 @@ class CistellaActivity : AppCompatActivity() {
         val textEsdeveniment: TextView = vista.findViewById(R.id.textEsdeveniment)
         val textQuantitat: TextView = vista.findViewById(R.id.textQuantitat)
         val textSubtotal: TextView = vista.findViewById(R.id.textSubtotal)
+        val btnMenys: Button = vista.findViewById(R.id.btnMenys)
+        val btnMes: Button = vista.findViewById(R.id.btnMes)
+        val btnEliminar: Button = vista.findViewById(R.id.btnEliminar)
 
         textEntrada.text = tipus.nom
 
@@ -107,11 +132,79 @@ class CistellaActivity : AppCompatActivity() {
         textQuantitat.text = "x" + quantitat + "  ·  " + String.format("%.2f €", tipus.preu) + " / u"
         textSubtotal.text = String.format("%.2f €", tipus.preu * quantitat)
 
+        btnEliminar.visibility = View.GONE
+
+        btnMes.setOnClickListener {
+            Dades.cistella.add(tipus)
+            mostrarCistella()
+        }
+
+        btnMenys.setOnClickListener {
+            if (quantitat == 1) {
+                val dialeg = AlertDialog.Builder(this)
+                dialeg.setTitle("Treure entrada")
+                dialeg.setMessage("Segur que vols treure " + tipus.nom + " de la cistella?")
+                dialeg.setPositiveButton("Sí") { _, _ ->
+                    Dades.cistella.remove(tipus)
+                    mostrarCistella()
+                }
+                dialeg.setNegativeButton("No", null)
+                dialeg.show()
+            } else {
+                Dades.cistella.remove(tipus)
+                mostrarCistella()
+            }
+        }
+
+        layoutLinies.addView(vista)
+    }
+
+    fun afegirLiniaSeient(seient: SeientCistella, tipus: TipusEntrada) {
+        val vista = layoutInflater.inflate(R.layout.item_cistella, layoutLinies, false)
+
+        val textEntrada: TextView = vista.findViewById(R.id.textEntrada)
+        val textEsdeveniment: TextView = vista.findViewById(R.id.textEsdeveniment)
+        val textQuantitat: TextView = vista.findViewById(R.id.textQuantitat)
+        val textSubtotal: TextView = vista.findViewById(R.id.textSubtotal)
+        val btnMenys: Button = vista.findViewById(R.id.btnMenys)
+        val btnMes: Button = vista.findViewById(R.id.btnMes)
+        val btnEliminar: Button = vista.findViewById(R.id.btnEliminar)
+
+        textEntrada.text = tipus.nom
+
+        val esdeveniment = Dades.buscarEsdeveniment(seient.idEsdeveniment)
+        if (esdeveniment != null) {
+            textEsdeveniment.text = esdeveniment.nom
+        }
+
+        textQuantitat.text = "Fila " + seient.fila + "  ·  Seient " + seient.columna
+        textSubtotal.text = String.format("%.2f €", tipus.preu)
+
+        if (seient.error) {
+            textQuantitat.text = textQuantitat.text.toString() + "  ·  NO DISPONIBLE"
+            textQuantitat.setTextColor(Color.parseColor("#E53935"))
+        }
+
+        btnMenys.visibility = View.GONE
+        btnMes.visibility = View.GONE
+
+        btnEliminar.setOnClickListener {
+            val dialeg = AlertDialog.Builder(this)
+            dialeg.setTitle("Treure butaca")
+            dialeg.setMessage("Segur que vols treure la butaca Fila " + seient.fila + " Seient " + seient.columna + "?")
+            dialeg.setPositiveButton("Sí") { _, _ ->
+                Dades.seientsCistella.remove(seient)
+                mostrarCistella()
+            }
+            dialeg.setNegativeButton("No", null)
+            dialeg.show()
+        }
+
         layoutLinies.addView(vista)
     }
 
     fun ferCompra() {
-        if (Dades.cistella.isEmpty()) {
+        if (Dades.cistella.isEmpty() && Dades.seientsCistella.isEmpty()) {
             Toast.makeText(this, "La cistella està buida", Toast.LENGTH_SHORT).show()
             return
         }
@@ -142,11 +235,24 @@ class CistellaActivity : AppCompatActivity() {
             }
         }
 
+        val seients = JSONArray()
+
+        for (seient in Dades.seientsCistella) {
+            seient.error = false
+
+            val objSeient = JSONObject()
+            objSeient.put("esdeveniment", seient.idEsdeveniment)
+            objSeient.put("tipus", seient.idTipus)
+            objSeient.put("seient", seient.idSeient)
+            seients.put(objSeient)
+        }
+
         val peticio = JSONObject()
         peticio.put("type", "compra")
         peticio.put("nom", nom)
         peticio.put("correu", correu)
         peticio.put("entrades", entrades)
+        peticio.put("seients", seients)
 
         Connexio.onMissatge = { missatge ->
             runOnUiThread {
@@ -164,6 +270,7 @@ class CistellaActivity : AppCompatActivity() {
 
         if (type == "compraOk") {
             Dades.cistella.clear()
+            Dades.seientsCistella.clear()
             mostrarCistella()
 
             val localitzadors = obj.getJSONArray("localitzadors")
@@ -176,7 +283,26 @@ class CistellaActivity : AppCompatActivity() {
         }
 
         if (type == "compraError") {
-            mostrarDialeg("Error", obj.getString("message"))
+            val fallats = obj.optJSONArray("seientsFallats")
+
+            if (fallats != null && fallats.length() > 0) {
+                var text = "Aquestes butaques ja no estan disponibles. No s'ha comprat res.\n"
+
+                for (i in 0 until fallats.length()) {
+                    val idFallat = fallats.getString(i)
+                    for (seient in Dades.seientsCistella) {
+                        if (seient.idSeient == idFallat) {
+                            seient.error = true
+                            text = text + "\nFila " + seient.fila + " Seient " + seient.columna
+                        }
+                    }
+                }
+
+                mostrarCistella()
+                mostrarDialeg("Error", text)
+            } else {
+                mostrarDialeg("Error", obj.getString("message"))
+            }
         }
 
         btnComprar.isEnabled = true

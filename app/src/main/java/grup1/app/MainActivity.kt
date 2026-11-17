@@ -20,6 +20,7 @@ class MainActivity : AppCompatActivity() {
     lateinit var btnCistella: ImageView
     lateinit var textComptador: TextView
     lateinit var btnMenuEntrades: LinearLayout
+    lateinit var btnMenuPerfil: LinearLayout
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,6 +36,7 @@ class MainActivity : AppCompatActivity() {
         btnCistella = findViewById(R.id.btnCistella)
         textComptador = findViewById(R.id.textComptador)
         btnMenuEntrades = findViewById(R.id.btnMenuEntrades)
+        btnMenuPerfil = findViewById(R.id.btnMenuPerfil)
 
         recyclerEsdeveniments.layoutManager = LinearLayoutManager(this)
 
@@ -45,6 +47,11 @@ class MainActivity : AppCompatActivity() {
 
         btnMenuEntrades.setOnClickListener {
             val intent = Intent(this, MevesEntradesActivity::class.java)
+            startActivity(intent)
+        }
+
+        btnMenuPerfil.setOnClickListener {
+            val intent = Intent(this, PerfilActivity::class.java)
             startActivity(intent)
         }
 
@@ -91,6 +98,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun actualitzarComptador() {
-        textComptador.text = Dades.cistella.size.toString()
+        textComptador.text = (Dades.cistella.size + Dades.seientsCistella.size).toString()
     }
 }
